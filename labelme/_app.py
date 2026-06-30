@@ -1068,6 +1068,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _setup_canvas(self) -> _CanvasWidgets:
         zoom_widget = ZoomWidget()
+        shortcuts = self._config["shortcuts"]
 
         canvas = Canvas(
             epsilon=self._config["epsilon"],
@@ -1077,6 +1078,9 @@ class MainWindow(QtWidgets.QMainWindow):
             allow_out_of_bounds_points=self._config["canvas"][
                 "allow_out_of_bounds_points"
             ],
+            shortcut_toggle_visibility=shortcuts.get("toggle_shape_visibility", "Space"),
+            shortcut_switch_edit_mode=shortcuts.get("switch_to_edit_mode", "Ctrl+`"),
+            shortcut_convert_rectangle=shortcuts.get("convert_to_rectangle", "Ctrl+T"),
         )
         canvas.set_point_size(self._config["shape"]["point_size"])
         canvas.set_show_labels(self._config["shape"]["show_labels"])

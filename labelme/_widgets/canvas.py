@@ -240,6 +240,15 @@ class Canvas(QtWidgets.QWidget):
                 "ai_box_to_shape": True,
             },
         )
+        self._shortcut_toggle_visibility: str = kwargs.pop(
+            "shortcut_toggle_visibility", "Space"
+        )
+        self._shortcut_switch_edit_mode: str = kwargs.pop(
+            "shortcut_switch_edit_mode", "Ctrl+`"
+        )
+        self._shortcut_convert_rectangle: str = kwargs.pop(
+            "shortcut_convert_rectangle", "Ctrl+T"
+        )
         super().__init__(*args, **kwargs)
 
         self._cursor = CursorRole.DEFAULT
@@ -1706,6 +1715,71 @@ class Canvas(QtWidgets.QWidget):
         self.update()
         self._is_moving_shape = True
 
+    @staticmethod
+    def _shortcut_matches(shortcut: str, a0: QtGui.QKeyEvent) -> bool:
+        """Check if a key event matches a shortcut string like 'Ctrl+T', 'Space', 'T'."""
+        if not shortcut:
+            return False
+        key = a0.key()
+        modifiers = a0.modifiers()
+        parts = shortcut.split("+")
+        expected_modifiers = Qt.KeyboardModifier.NoModifier
+        expected_key = None
+        _MODIFIER_MAP = {
+            "Ctrl": Qt.KeyboardModifier.ControlModifier,
+            "Shift": Qt.KeyboardModifier.ShiftModifier,
+            "Alt": Qt.KeyboardModifier.AltModifier,
+            "Meta": Qt.KeyboardModifier.MetaModifier,
+        }
+        _KEY_MAP = {
+            "Space": Qt.Key.Key_Space,
+            "Escape": Qt.Key.Key_Escape,
+            "Return": Qt.Key.Key_Return,
+            "Enter": Qt.Key.Key_Return,
+            "Tab": Qt.Key.Key_Tab,
+            "Backspace": Qt.Key.Key_Backspace,
+            "Delete": Qt.Key.Key_Delete,
+            "Up": Qt.Key.Key_Up,
+            "Down": Qt.Key.Key_Down,
+            "Left": Qt.Key.Key_Left,
+            "Right": Qt.Key.Key_Right,
+            "`": Qt.Key.Key_QuoteLeft,
+            "~": Qt.Key.Key_QuoteLeft,
+            ".": Qt.Key.Key_Period,
+            ",": Qt.Key.Key_Comma,
+            ";": Qt.Key.Key_Semicolon,
+            "'": Qt.Key.Key_Apostrophe,
+            "[": Qt.Key.Key_BracketLeft,
+            "]": Qt.Key.Key_BracketRight,
+            "\\": Qt.Key.Key_Backslash,
+            "-": Qt.Key.Key_Minus,
+            "=": Qt.Key.Key_Equal,
+            "/": Qt.Key.Key_Slash,
+        }
+        for part in parts:
+            mod = _MODIFIER_MAP.get(part)
+            if mod is not None:
+                expected_modifiers |= mod
+                continue
+            if len(part) == 1 and "A" <= part.upper() <= "Z":
+                expected_key = getattr(Qt.Key, f"Key_{part.upper()}")
+            elif part.isdigit():
+                expected_key = getattr(Qt.Key, f"Key_{part}")
+            else:
+                expected_key = _KEY_MAP.get(part)
+        if expected_key is None:
+            return False
+        # Compare modifiers (the key event includes the key's native modifier,
+        # so filter out the keypad bit and compare only relevant bits).
+        relevant = (
+            Qt.KeyboardModifier.ControlModifier
+            | Qt.KeyboardModifier.ShiftModifier
+            | Qt.KeyboardModifier.AltModifier
+            | Qt.KeyboardModifier.MetaModifier
+        )
+        return key == expected_key and (modifiers & relevant) == (expected_modifiers & relevant)
+
+
     def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
         modifiers = a0.modifiers()
         key = a0.key()
@@ -1729,28 +1803,25 @@ class Canvas(QtWidgets.QWidget):
                 self._move_by_keyboard(QPointF(MOVE_SPEED, 0.0))
             elif a0.matches(QtGui.QKeySequence.StandardKey.SelectAll):
                 self.select_shapes(shapes=self.shapes[:])
-            elif key == Qt.Key.Key_Space and self.selected_shapes:
-                # Toggle visibility of selected shapes
-                self.backup_shapes()
-                changed_shapes: list[Shape] = []
-                for shape in self.selected_shapes:
-                    shape.visible = not shape.visible
-                    changed_shapes.append(shape)
-                self.update()
-                self.shape_visibility_toggled.emit(changed_shapes)
-        # Handle Ctrl+` to switch to edit mode regardless of current mode
-        if (
-            modifiers == Qt.KeyboardModifier.ControlModifier
-            and key == Qt.Key.Key_QuoteLeft
-        ):
+            # Toggle visibility (configurable shortcut, default Space)
+            if self._shortcut_matches(self._shortcut_toggle_visibility, a0):
+                if self.selected_shapes:
+                    self.backup_shapes()
+                    changed_shapes: list[Shape] = []
+                    for shape in self.selected_shapes:
+                        shape.visible = not shape.visible
+                        changed_shapes.append(shape)
+                    self.update()
+                    self.shape_visibility_toggled.emit(changed_shapes)
+        # Handle switch to edit mode (configurable shortcut, default Ctrl+`)
+        if self._shortcut_matches(self._shortcut_switch_edit_mode, a0):
             if self._current is not None:
                 self._cancel_current_shape()
             self.set_editing(True)
             self.edit_mode_requested.emit()
-        # Handle Ctrl+T to convert any shape to 4-point rectangle (axis-aligned)
+        # Handle convert to rectangle (configurable shortcut, default Ctrl+T)
         if (
-            modifiers == Qt.KeyboardModifier.ControlModifier
-            and key == Qt.Key.Key_T
+            self._shortcut_matches(self._shortcut_convert_rectangle, a0)
             and self.mode == _CanvasMode.EDIT
         ):
             if self.selected_shapes:

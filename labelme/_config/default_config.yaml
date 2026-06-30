@@ -117,4 +117,7 @@ shortcuts:
   remove_selected_point: [Meta+H, Backspace]
   show_all_shapes:
   hide_all_shapes:
-  toggle_all_shapes: T
+  toggle_all_shapes: V
+  toggle_shape_visibility: Space
+  switch_to_edit_mode: Ctrl+`
+  convert_to_rectangle: T
