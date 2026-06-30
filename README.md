@@ -80,7 +80,7 @@ The following shortcuts allow you to move individual edges of the selected bound
 Edit the following file:
 
 ```text
-~/.labelme/config.yaml
+labelme/_config/default_config.yaml
 ```
 
 Example configuration:
