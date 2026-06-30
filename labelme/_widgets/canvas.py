@@ -98,7 +98,7 @@ def _shape_to_draft(shape: Shape) -> _DraftShape:
     )
 
 
-MOVE_SPEED: float = 5.0
+MOVE_SPEED: float = 1.0
 
 _CreateMode = Literal[
     "polygon",
@@ -249,6 +249,14 @@ class Canvas(QtWidgets.QWidget):
         self._shortcut_convert_rectangle: str = kwargs.pop(
             "shortcut_convert_rectangle", "Ctrl+T"
         )
+        self._shortcut_edge_top_up: str = kwargs.pop("shortcut_edge_top_up", "Ctrl+Up")
+        self._shortcut_edge_top_down: str = kwargs.pop("shortcut_edge_top_down", "Ctrl+Down")
+        self._shortcut_edge_left_left: str = kwargs.pop("shortcut_edge_left_left", "Ctrl+Left")
+        self._shortcut_edge_left_right: str = kwargs.pop("shortcut_edge_left_right", "Ctrl+Right")
+        self._shortcut_edge_bottom_up: str = kwargs.pop("shortcut_edge_bottom_up", "Alt+Up")
+        self._shortcut_edge_bottom_down: str = kwargs.pop("shortcut_edge_bottom_down", "Alt+Down")
+        self._shortcut_edge_right_left: str = kwargs.pop("shortcut_edge_right_left", "Alt+Left")
+        self._shortcut_edge_right_right: str = kwargs.pop("shortcut_edge_right_right", "Alt+Right")
         super().__init__(*args, **kwargs)
 
         self._cursor = CursorRole.DEFAULT
@@ -1780,6 +1788,41 @@ class Canvas(QtWidgets.QWidget):
         return key == expected_key and (modifiers & relevant) == (expected_modifiers & relevant)
 
 
+    def _move_box_edge(self, edge: str, speed: float) -> None:
+        """Move one edge of selected box shapes. edge: 'top','bottom','left','right'."""
+        if not self.selected_shapes:
+            return
+        self.backup_shapes()
+        for shape in self.selected_shapes:
+            if shape.shape_type not in ("rectangle",) or len(shape.points) not in (2, 4):
+                continue
+            pts = shape.points
+            if len(pts) == 2:
+                x1, y1 = float(pts[0][0]), float(pts[0][1])
+                x2, y2 = float(pts[1][0]), float(pts[1][1])
+            else:
+                x1, y1 = float(pts[0][0]), float(pts[0][1])
+                x2, y2 = float(pts[2][0]), float(pts[2][1])
+            if edge in ("top",):
+                y1 += speed
+            elif edge in ("bottom",):
+                y2 += speed
+            elif edge in ("left",):
+                x1 += speed
+            elif edge in ("right",):
+                x2 += speed
+            x1, x2 = min(x1, x2), max(x1, x2)
+            y1, y2 = min(y1, y2), max(y1, y2)
+            shape.points[0] = [x1, y1]
+            if len(pts) == 2:
+                shape.points[1] = [x2, y2]
+            else:
+                shape.points[1] = [x2, y1]
+                shape.points[2] = [x2, y2]
+                shape.points[3] = [x1, y2]
+        self.update()
+        self._is_moving_shape = True
+
     def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
         modifiers = a0.modifiers()
         key = a0.key()
@@ -1793,16 +1836,33 @@ class Canvas(QtWidgets.QWidget):
             elif modifiers == Qt.KeyboardModifier.AltModifier:
                 self._snapping = False
         elif self.mode == _CanvasMode.EDIT:
-            if key == Qt.Key.Key_Up:
+            if key == Qt.Key.Key_Up and not modifiers:
                 self._move_by_keyboard(QPointF(0.0, -MOVE_SPEED))
-            elif key == Qt.Key.Key_Down:
+            elif key == Qt.Key.Key_Down and not modifiers:
                 self._move_by_keyboard(QPointF(0.0, MOVE_SPEED))
-            elif key == Qt.Key.Key_Left:
+            elif key == Qt.Key.Key_Left and not modifiers:
                 self._move_by_keyboard(QPointF(-MOVE_SPEED, 0.0))
-            elif key == Qt.Key.Key_Right:
+            elif key == Qt.Key.Key_Right and not modifiers:
                 self._move_by_keyboard(QPointF(MOVE_SPEED, 0.0))
             elif a0.matches(QtGui.QKeySequence.StandardKey.SelectAll):
                 self.select_shapes(shapes=self.shapes[:])
+            # Edge move shortcuts (only in EDIT mode for rectangle shapes)
+            if self._shortcut_matches(self._shortcut_edge_top_up, a0):
+                self._move_box_edge("top", -MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_top_down, a0):
+                self._move_box_edge("top", MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_left_left, a0):
+                self._move_box_edge("left", -MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_left_right, a0):
+                self._move_box_edge("left", MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_bottom_up, a0):
+                self._move_box_edge("bottom", -MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_bottom_down, a0):
+                self._move_box_edge("bottom", MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_right_left, a0):
+                self._move_box_edge("right", -MOVE_SPEED)
+            elif self._shortcut_matches(self._shortcut_edge_right_right, a0):
+                self._move_box_edge("right", MOVE_SPEED)
             # Toggle visibility (configurable shortcut, default Space)
             if self._shortcut_matches(self._shortcut_toggle_visibility, a0):
                 if self.selected_shapes:

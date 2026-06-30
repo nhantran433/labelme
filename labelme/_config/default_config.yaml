@@ -121,3 +121,11 @@ shortcuts:
   toggle_shape_visibility: Space
   switch_to_edit_mode: Ctrl+`
   convert_to_rectangle: T
+  edge_top_up: Ctrl+Up
+  edge_top_down: Ctrl+Down
+  edge_left_left: Ctrl+Left
+  edge_left_right: Ctrl+Right
+  edge_bottom_up: Alt+Up
+  edge_bottom_down: Alt+Down
+  edge_right_left: Alt+Left
+  edge_right_right: Alt+Right

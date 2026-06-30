@@ -1081,6 +1081,14 @@ class MainWindow(QtWidgets.QMainWindow):
             shortcut_toggle_visibility=shortcuts.get("toggle_shape_visibility", "Space"),
             shortcut_switch_edit_mode=shortcuts.get("switch_to_edit_mode", "Ctrl+`"),
             shortcut_convert_rectangle=shortcuts.get("convert_to_rectangle", "Ctrl+T"),
+            shortcut_edge_top_up=shortcuts.get("edge_top_up", "Ctrl+Up"),
+            shortcut_edge_top_down=shortcuts.get("edge_top_down", "Ctrl+Down"),
+            shortcut_edge_left_left=shortcuts.get("edge_left_left", "Ctrl+Left"),
+            shortcut_edge_left_right=shortcuts.get("edge_left_right", "Ctrl+Right"),
+            shortcut_edge_bottom_up=shortcuts.get("edge_bottom_up", "Alt+Up"),
+            shortcut_edge_bottom_down=shortcuts.get("edge_bottom_down", "Alt+Down"),
+            shortcut_edge_right_left=shortcuts.get("edge_right_left", "Alt+Left"),
+            shortcut_edge_right_right=shortcuts.get("edge_right_right", "Alt+Right"),
         )
         canvas.set_point_size(self._config["shape"]["point_size"])
         canvas.set_show_labels(self._config["shape"]["show_labels"])
@@ -1187,6 +1195,17 @@ class MainWindow(QtWidgets.QMainWindow):
         file_search.setPlaceholderText(self.tr("Search Filename"))
         file_search.textChanged.connect(self._on_file_search_changed)
         file_list = QtWidgets.QListWidget()
+        file_list.setStyleSheet(
+            "QListWidget::item:selected {"
+            "  background-color: palette(Highlight);"
+            "  color: palette(HighlightedText);"
+            "}"
+            "QListWidget::item:selected:!active {"
+            "  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:0,"
+            "    stop:0 #4a90d9, stop:1 #357abd);"
+            "  color: white;"
+            "}"
+        )
         file_list.itemSelectionChanged.connect(self._file_list_item_selection_changed)
         file_list_layout = QtWidgets.QVBoxLayout()
         file_list_layout.setContentsMargins(0, 0, 0, 0)

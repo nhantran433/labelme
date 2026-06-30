@@ -44,11 +44,11 @@ labelme ./dataset
 
 ---
 
-## Custom Features
+# Custom Features
 
-This customized version includes the following enhancements:
+## Keyboard Shortcuts
 
-### Keyboard Shortcuts
+### General
 
 | Shortcut | Description |
 |----------|-------------|
@@ -56,22 +56,73 @@ This customized version includes the following enhancements:
 | **Ctrl + `** | Exit drawing mode and switch back to **Edit Mode**. |
 | **Ctrl + T** | Convert all selected shapes into axis-aligned 4-point rectangles. |
 
-### Additional Features
+---
 
-- **File Progress Indicator**
-  - Displays the current file index in the format:
-    ```
-    4 / 100
-    ```
-    indicating the current image number and the total number of images.
+### Bounding Box Edge Adjustment
 
-- **Resume Previous Session**
-  - Automatically remembers the last opened file.
-  - When Labelme is reopened, it resumes from the last annotated image.
+The following shortcuts allow you to move individual edges of the selected bounding box without affecting the opposite edge.
+
+| Shortcut | Action |
+|----------|--------|
+| **Ctrl + ↑** | Move the **top edge** upward |
+| **Ctrl + ↓** | Move the **top edge** downward |
+| **Ctrl + ←** | Move the **left edge** left |
+| **Ctrl + →** | Move the **left edge** right |
+| **Alt + ↑** | Move the **bottom edge** upward |
+| **Alt + ↓** | Move the **bottom edge** downward |
+| **Alt + ←** | Move the **right edge** left |
+| **Alt + →** | Move the **right edge** right |
+
+> **Note:** These shortcuts are fully configurable through the Labelme configuration file.
+
+### Configure Shortcuts
+
+Edit the following file:
+
+```text
+~/.labelme/config.yaml
+```
+
+Example configuration:
+
+```yaml
+shortcuts:
+  edge_top_up: Ctrl+Up
+  edge_top_down: Ctrl+Down
+  edge_left_left: Ctrl+Left
+  edge_left_right: Ctrl+Right
+  edge_bottom_up: Alt+Up
+  edge_bottom_down: Alt+Down
+  edge_right_left: Alt+Left
+  edge_right_right: Alt+Right
+```
+
+You can change any shortcut to your preferred key combination.
+
+---
+
+## Additional Features
+
+### File Progress Indicator
+
+Displays the current image index in the file list.
+
+Example:
+
+```text
+4 / 100
+```
+
+This indicates that the current image is the 4th image out of 100.
+
+### Resume Previous Session
+
+- Automatically remembers the last opened image.
+- Reopens the last annotated image when Labelme is launched again.
 
 ---
 
 ## Notes
 
-- The added shortcuts are only available in this customized version.
+- All added shortcuts and features are available only in this customized version.
 - Existing Labelme functionality remains unchanged unless otherwise specified.
